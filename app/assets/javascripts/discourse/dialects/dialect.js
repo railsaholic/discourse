@@ -31,19 +31,31 @@ function initializeDialects() {
   @returns {Array} the parsed tree
 **/
 function parseTree(tree, path, insideCounts) {
+
   if (tree instanceof Array) {
     Discourse.Dialect.trigger('parseNode', {node: tree, path: path, dialect: dialect, insideCounts: insideCounts || {}});
+
 
     path = path || [];
     insideCounts = insideCounts || {};
 
     path.push(tree);
-    tree.slice(1).forEach(function (n) {
-      var tagName = n[0];
+
+    for (var i=1; i<tree.length; i++) {
+      var n = tree[i],
+          tagName = n[0];
+
       insideCounts[tagName] = (insideCounts[tagName] || 0) + 1;
-      parseTree(n, path, insideCounts);
+
+      if (n && n.length === 2 && n[0] === "p" && /^<!--([\s\S]*)-->$/m.exec(n[1])) {
+        // Remove paragraphs around comment-only nodes.
+        tree[i] = n[1];
+      } else {
+        parseTree(n, path, insideCounts);
+      }
+
       insideCounts[tagName] = insideCounts[tagName] - 1;
-    });
+    }
     path.pop();
   }
   return tree;
@@ -208,6 +220,19 @@ Discourse.Dialect = {
   },
 
   /**
+    Registers a block for processing. This is more complicated than using one of
+    the other helpers such as `replaceBlock` so consider using them first!
+
+    @method registerBlock
+    @param {String} the name of the block handler
+    @param {Function} the handler
+
+  **/
+  registerBlock: function(name, handler) {
+    dialect.block[name] = handler;
+  },
+
+  /**
     Replaces a block of text between a start and stop. As opposed to inline, these
     might span multiple lines.
 
@@ -233,9 +258,11 @@ Discourse.Dialect = {
 
   **/
   replaceBlock: function(args) {
-    dialect.block[args.start.toString()] = function(block, next) {
+    this.registerBlock(args.start.toString(), function(block, next) {
+
       args.start.lastIndex = 0;
       var m = (args.start).exec(block);
+
       if (!m) { return; }
 
       var startPos = block.indexOf(m[0]),
@@ -264,9 +291,8 @@ Discourse.Dialect = {
       while (next.length > 0) {
         var b = next.shift(),
             blockLine = b.lineNumber,
-            diff = ((typeof blockLine === "undefined") ? lineNumber : blockLine) - lineNumber;
-
-        var endFound = b.indexOf(args.stop),
+            diff = ((typeof blockLine === "undefined") ? lineNumber : blockLine) - lineNumber,
+            endFound = b.indexOf(args.stop),
             leadingContents = b.slice(0, endFound),
             trailingContents = b.slice(endFound+args.stop.length);
 
@@ -287,10 +313,12 @@ Discourse.Dialect = {
         }
       }
 
-      var test = args.emitter.call(this, blockContents, m, dialect.options);
-      result.push(test);
+      var emitterResult = args.emitter.call(this, blockContents, m, dialect.options);
+      if (emitterResult) {
+        result.push(emitterResult);
+      }
       return result;
-    };
+    });
   },
 
   /**

@@ -105,7 +105,7 @@ test("Links", function() {
          'allows multiple links on one line');
 
   cooked("* [Evil Trout][1]\n  [1]: http://eviltrout.com",
-         "<ul><li><a href=\"http://eviltrout.com\">Evil Trout</a><br></li></ul>",
+         "<ul><li><a href=\"http://eviltrout.com\">Evil Trout</a></li></ul>",
          "allows markdown link references in a list");
 
 });
@@ -285,7 +285,7 @@ test("SanitizeHTML", function() {
   cooked("hello<script>alert(42)</script>", "<p>hello</p>", "it sanitizes while cooking");
 
   cooked("<a href='http://disneyland.disney.go.com/'>disney</a> <a href='http://reddit.com'>reddit</a>",
-         "<p><a href=\"http://disneyland.disney.go.com/\">disney</a> <a href=\"http://reddit.com\">reddit</a></p>",
+         "<a href=\"http://disneyland.disney.go.com/\">disney</a> <a href=\"http://reddit.com\">reddit</a>",
          "we can embed proper links");
 
 });
