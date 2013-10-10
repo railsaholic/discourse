@@ -3,7 +3,6 @@
 
     <section class='user-navigation'>
 
-      <h3>{{i18n user.activity_stream}}</h3>
       <ul class='action-list nav-stacked'>
         {{activityFilter count=statsCountNonPM user=model}}
         {{#each stat in statsExcludingPms}}
