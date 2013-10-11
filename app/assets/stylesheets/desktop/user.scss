@@ -154,6 +154,7 @@
       text-align: center;
       padding: 10px;
 
+
       h1 {
         font-size: 30px;
         font-weight: normal;
@@ -174,6 +175,27 @@
         margin-bottom: 4px;
       }
 
+      .primary {
+        margin-top: 30px;
+        float: left;
+        width: 75%;
+      }
+
+      .secondary {
+        float: right;
+        background-color: #222;
+        text-align: right;
+        padding: 0 10px;
+        width: 20%;
+        @include border-radius-all(4px);
+
+        dd {
+          color: white;
+        }
+        dt {
+          color: #aaa;
+        }
+      }
     }
 
     .controls {
